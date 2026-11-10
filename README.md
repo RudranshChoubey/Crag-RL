@@ -2,7 +2,7 @@
 
 **Mitigating fact-conflicting hallucination in low-resource languages (Hindi)**
 
-Rudransh Choubey · Saisish Patnaik · Pranav Srivastava
+Rudransh Choubey · Pranav Srivastava · Saisish Patnaik 
 Department of AIML, CSE, JAIN (Deemed-to-be University), Bengaluru
 
 ## Overview
