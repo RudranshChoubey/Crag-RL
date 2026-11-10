@@ -13,7 +13,7 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 DATA_DIR = "./data"
 TQA_DIR = "./data/truthfulqa_hindi"
 TQA_CSV = os.path.join(TQA_DIR, "TruthfulQA.csv")                       # original English source
-TQA_RAW_V0 = os.path.join(TQA_DIR, "truthfulqa_hindi_raw.jsonl")        # v0 (opus-mt), kept for the report
+TQA_RAW_V0 = os.path.join(TQA_DIR, "truthfulqa_hindi_raw.jsonl")        # v0 (opus-mt), rejected; kept for reference
 TQA_FILE = os.path.join(TQA_DIR, "truthfulqa_hindi.jsonl")              # v1 benchmark used for evaluation
 TQA_SAMPLE_CSV = os.path.join(TQA_DIR, "truthfulqa_verification_sample.csv")
 SFT_TRAIN = os.path.join(DATA_DIR, "sft_train.jsonl")

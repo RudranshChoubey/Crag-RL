@@ -6,7 +6,7 @@ Changes from the first version:
   * ALL of Simple English Wikipedia by default (was the first 25,000 articles).
   * XQuAD English paragraphs are indexed, so the training/validation questions are answerable.
   * --targeted also fetches full English Wikipedia pages for every TruthfulQA question and caches
-    them in data/kb_cache/ (the frozen snapshot you commit to GitHub).
+    them in data/kb_cache/ (a frozen, reproducible snapshot).
   * New collection name (wiki_passages_v2) so old 350-word chunks are not mixed in.
 
     python Knowledege_build.py --targeted                 # recommended (~30-60 min on GPU)

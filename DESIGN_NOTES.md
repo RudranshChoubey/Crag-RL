@@ -16,7 +16,7 @@
 | 10 | English explanations in Hindi answers | "(The answer is not available…)" | stricter few-shot prompt + bracket stripping |
 | 11 | Broken benchmark translation | opus-mt-en-hi changed the meaning of ~23/40 sampled items | IndicTrans2 (NLLB-200 fallback) + screening + verification |
 
-## Deviations from the proposal (state these in the report)
+## Deviations from the original proposal
 
 | Proposal | Implementation | Reason |
 |---|---|---|

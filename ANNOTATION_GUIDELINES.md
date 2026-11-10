@@ -71,4 +71,4 @@ python Annotation_stats.py
 # Evaluation.py applies the corrections and cultural flags automatically
 ```
 
-Copy κ, the correction rate and its interval into the report (Section 4.4) and docs/DATASET.md.
+The resulting agreement and error-rate statistics are recorded in `docs/DATASET.md`.
