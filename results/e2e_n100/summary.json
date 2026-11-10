@@ -1,0 +1,224 @@
+{
+  "no_retrieval": {
+    "n": 100,
+    "hallucination_rate": 0.49,
+    "hallucination_ci95": [
+      0.39,
+      0.59
+    ],
+    "truthful_rate": 0.51,
+    "abstain_rate": 0.0,
+    "informative_truthful_rate": 0.51,
+    "factscore_lite": 0.44,
+    "factscore_ci95": [
+      0.35,
+      0.53
+    ],
+    "align_proxy": null,
+    "gated_rate": null,
+    "query_words": null,
+    "latency": {
+      "query": {
+        "mean": 0.0,
+        "p95": 0.0
+      },
+      "retrieval": {
+        "mean": 0.0,
+        "p95": 0.0
+      },
+      "synthesis": {
+        "mean": 7.05,
+        "p95": 10.45
+      },
+      "total": {
+        "mean": 7.05,
+        "p95": 10.45
+      }
+    },
+    "hallucination_rate_without_cultural": 0.49
+  },
+  "translate_retrieve": {
+    "n": 100,
+    "hallucination_rate": 0.22,
+    "hallucination_ci95": [
+      0.14,
+      0.31
+    ],
+    "truthful_rate": 0.65,
+    "abstain_rate": 0.5,
+    "informative_truthful_rate": 0.28,
+    "factscore_lite": 0.69,
+    "factscore_ci95": [
+      0.57,
+      0.8
+    ],
+    "align_proxy": 0.545,
+    "gated_rate": 0.04,
+    "query_words": 10.91,
+    "latency": {
+      "query": {
+        "mean": 0.441,
+        "p95": 0.962
+      },
+      "retrieval": {
+        "mean": 0.111,
+        "p95": 0.197
+      },
+      "synthesis": {
+        "mean": 7.066,
+        "p95": 11.088
+      },
+      "total": {
+        "mean": 7.617,
+        "p95": 11.729
+      }
+    },
+    "hallucination_rate_without_cultural": 0.22,
+    "self_contrast": {
+      "delta_sc": 0.27,
+      "corrected": 33,
+      "newly_introduced": 6,
+      "unchanged_hallucinated": 16,
+      "mcnemar_p": 0.0
+    },
+    "latency_overhead_s": 0.567
+  },
+  "llm_rewrite": {
+    "n": 100,
+    "hallucination_rate": 0.24,
+    "hallucination_ci95": [
+      0.16,
+      0.33
+    ],
+    "truthful_rate": 0.64,
+    "abstain_rate": 0.55,
+    "informative_truthful_rate": 0.21,
+    "factscore_lite": 0.633,
+    "factscore_ci95": [
+      0.5,
+      0.756
+    ],
+    "align_proxy": 0.684,
+    "gated_rate": 0.19,
+    "query_words": 7.13,
+    "latency": {
+      "query": {
+        "mean": 1.455,
+        "p95": 3.588
+      },
+      "retrieval": {
+        "mean": 0.046,
+        "p95": 0.055
+      },
+      "synthesis": {
+        "mean": 19.356,
+        "p95": 39.66
+      },
+      "total": {
+        "mean": 20.856,
+        "p95": 42.788
+      }
+    },
+    "hallucination_rate_without_cultural": 0.24,
+    "self_contrast": {
+      "delta_sc": 0.25,
+      "corrected": 34,
+      "newly_introduced": 9,
+      "unchanged_hallucinated": 15,
+      "mcnemar_p": 0.0002
+    },
+    "latency_overhead_s": 13.806
+  },
+  "sft_query": {
+    "n": 100,
+    "hallucination_rate": 0.08,
+    "hallucination_ci95": [
+      0.03,
+      0.13
+    ],
+    "truthful_rate": 0.73,
+    "abstain_rate": 0.81,
+    "informative_truthful_rate": 0.11,
+    "factscore_lite": 0.789,
+    "factscore_ci95": [
+      0.579,
+      0.947
+    ],
+    "align_proxy": 0.552,
+    "gated_rate": 0.53,
+    "query_words": 2.98,
+    "latency": {
+      "query": {
+        "mean": 0.343,
+        "p95": 0.58
+      },
+      "retrieval": {
+        "mean": 0.067,
+        "p95": 0.1
+      },
+      "synthesis": {
+        "mean": 3.239,
+        "p95": 10.102
+      },
+      "total": {
+        "mean": 3.649,
+        "p95": 10.436
+      }
+    },
+    "hallucination_rate_without_cultural": 0.08,
+    "self_contrast": {
+      "delta_sc": 0.41,
+      "corrected": 43,
+      "newly_introduced": 2,
+      "unchanged_hallucinated": 6,
+      "mcnemar_p": 0.0
+    },
+    "latency_overhead_s": -3.401
+  },
+  "crag_rl": {
+    "n": 100,
+    "hallucination_rate": 0.08,
+    "hallucination_ci95": [
+      0.03,
+      0.14
+    ],
+    "truthful_rate": 0.73,
+    "abstain_rate": 0.79,
+    "informative_truthful_rate": 0.13,
+    "factscore_lite": 0.857,
+    "factscore_ci95": [
+      0.714,
+      1.0
+    ],
+    "align_proxy": 0.576,
+    "gated_rate": 0.49,
+    "query_words": 3.12,
+    "latency": {
+      "query": {
+        "mean": 0.349,
+        "p95": 0.569
+      },
+      "retrieval": {
+        "mean": 0.074,
+        "p95": 0.181
+      },
+      "synthesis": {
+        "mean": 9.156,
+        "p95": 30.405
+      },
+      "total": {
+        "mean": 9.579,
+        "p95": 30.85
+      }
+    },
+    "hallucination_rate_without_cultural": 0.08,
+    "self_contrast": {
+      "delta_sc": 0.41,
+      "corrected": 44,
+      "newly_introduced": 3,
+      "unchanged_hallucinated": 5,
+      "mcnemar_p": 0.0
+    },
+    "latency_overhead_s": 2.529
+  }
+}
