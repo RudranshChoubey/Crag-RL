@@ -15,14 +15,24 @@ from crag_utils import ABSTAIN_HI, MIN_EVIDENCE_SIM, PPO_DIR, generate_queries, 
 
 
 class CrossLingualRAGPipeline:
-    def __init__(self, policy_dir=PPO_DIR, top_k=3, min_evidence=MIN_EVIDENCE_SIM, generator=None, retriever=None):
-        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+    # ---------------------------------------------------------
+    # [MODIFIED]: Changed top_k default to 5, lowered min_evidence
+    # ---------------------------------------------------------
+    def __init__(self, policy_dir=PPO_DIR, top_k=5, min_evidence=0.35, generator=None, retriever=None):
+        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, AutoConfig
         from phase2_retriever import KnowledgeRetriever
         from phase3_synthesis import CrossLingualGenerator
 
         print(f"[*] [1/3] Query policy from {policy_dir} (CPU, keeps GPU memory for Mistral)")
         self.ptok = AutoTokenizer.from_pretrained(policy_dir)
-        self.policy = AutoModelForSeq2SeqLM.from_pretrained(policy_dir).to("cpu").eval()
+        
+        # ---------------------------------------------------------
+        # [MODIFIED]: Fix tie_word_embeddings warning
+        # ---------------------------------------------------------
+        config = AutoConfig.from_pretrained(policy_dir)
+        config.tie_word_embeddings = False
+        self.policy = AutoModelForSeq2SeqLM.from_pretrained(policy_dir, config=config).to("cpu").eval()
+        
         print("[*] [2/3] ChromaDB retriever")
         self.retriever = retriever or KnowledgeRetriever(device=get_device())
         print("[*] [3/3] Mistral-7B reader")
@@ -73,9 +83,14 @@ def show(res):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--policy", default=PPO_DIR)
-    ap.add_argument("--top-k", type=int, default=3)
+    # ---------------------------------------------------------
+    # [MODIFIED]: Changed top_k default to 5 for better synthesis coverage
+    # ---------------------------------------------------------
+    ap.add_argument("--top-k", type=int, default=5)
+    ap.add_argument("--min-evidence", type=float, default=0.35)
     a = ap.parse_args()
-    pipe = CrossLingualRAGPipeline(a.policy, a.top_k)
+    
+    pipe = CrossLingualRAGPipeline(a.policy, a.top_k, a.min_evidence)
     print("\nTip on Windows: use Windows Terminal or the VS Code terminal - the old PowerShell console "
           "draws Devanagari incorrectly.\n")
     demo = ["माउंट एवरेस्ट की ऊंचाई कितनी है?", "रूस की राजधानी क्या है?", "दुनिया में कितने महाद्वीप हैं?",

@@ -20,6 +20,7 @@ Part B  --part e2e     (Mistral; ~1 h for 100 items)
     python Evaluation.py --part query
     python Evaluation.py --part e2e --n 100
     python Evaluation.py --part e2e --n 0          # whole benchmark (several hours)
+    python Evaluation.py --part e2e --verified-only  # only the human-verified items
     python Evaluation.py --part e2e --systems no_retrieval --policy crag_rl_no_cos=./models/ppo_no_cos   # ablation
 Results are written to ./results/ and resume automatically if interrupted.
 """
@@ -34,7 +35,7 @@ from collections import defaultdict
 import numpy as np
 
 from crag_utils import (ABSTAIN_HI, MT_HI_EN, NLI_MODEL, PPO_DIR, RESULTS_DIR, SFT_DIR, SFT_VAL, TQA_FILE,
-                        TQA_SAMPLE_CSV, append_jsonl, generate_queries, get_device, load_tqa_english_refs,
+                        append_jsonl, generate_queries, get_device, load_tqa_english_refs,
                         read_jsonl, set_seed)
 
 SYSTEMS = ["no_retrieval", "translate_retrieve", "llm_rewrite", "sft_query", "crag_rl"]
@@ -157,28 +158,23 @@ def part_query(n):
 
 
 # ------------------------------------------------------------------ Part B
-def load_benchmark(n, seed):
-    import pandas as pd
+def load_benchmark(n, seed, verified_only=False):
+    """Verified benchmark (Annotation_stats.py output) if present, else the machine-translated v1."""
+    from Annotation_stats import TQA_VERIFIED
 
-    items = {r["id"]: r for r in read_jsonl(TQA_FILE)}
-    if os.path.exists(TQA_SAMPLE_CSV):  # apply human corrections + cultural flags
-        df = pd.read_csv(TQA_SAMPLE_CSV, encoding="utf-8-sig")
-        fixed = flagged = 0
-        for _, r in df.iterrows():
-            if r["id"] not in items:
-                continue
-            c = r.get("corrected_question_hi")
-            if isinstance(c, str) and c.strip():
-                items[r["id"]]["question_hi"] = c.strip()
-                items[r["id"]]["verification_status"] = "corrected"
-                fixed += 1
-            elif pd.notna(r.get("annotator_1_valid")) or pd.notna(r.get("annotator_2_valid")):
-                items[r["id"]]["verification_status"] = "verified"
-            if int(pd.to_numeric(r.get("cultural_flag"), errors="coerce") or 0) == 1:
-                items[r["id"]]["cultural_adaptation_flag"] = True
-                flagged += 1
-        print(f"[*] Applied {fixed} human corrections and {flagged} cultural flags from {TQA_SAMPLE_CSV}")
+    if os.path.exists(TQA_VERIFIED):
+        items = {r["id"]: r for r in read_jsonl(TQA_VERIFIED)}
+        st = defaultdict(int)
+        for r in items.values():
+            st[r.get("verification_status", "unverified")] += 1
+        print(f"[*] Using the human-verified benchmark {TQA_VERIFIED}: {dict(st)}")
+    else:
+        items = {r["id"]: r for r in read_jsonl(TQA_FILE)}
+        print(f"[!] {TQA_VERIFIED} not found (run Annotation_stats.py); using unverified {TQA_FILE}")
     rows = list(items.values())
+    if verified_only:
+        rows = [r for r in rows if r.get("verification_status", "unverified") != "unverified"]
+        print(f"[*] --verified-only: evaluating on the {len(rows)} human-verified items")
     if n and n < len(rows):  # category-stratified, seeded sample
         by = defaultdict(list)
         for r in rows:
@@ -194,15 +190,15 @@ def load_benchmark(n, seed):
     return rows
 
 
-def part_e2e(n, seed, systems, top_k, extra_policies=None):
+def part_e2e(n, seed, systems, top_k, extra_policies=None, verified_only=False):
     import torch
     from sentence_transformers import SentenceTransformer  # noqa: F401 (encoder comes from the retriever)
     from run_full_system import CrossLingualRAGPipeline
     from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-    items = load_benchmark(n, seed)
+    items = load_benchmark(n, seed, verified_only)
     refs = load_tqa_english_refs()
-    out_dir = f"{RESULTS_DIR}/e2e_n{len(items)}"
+    out_dir = f"{RESULTS_DIR}/e2e_{'verified_' if verified_only else ''}n{len(items)}"
     os.makedirs(out_dir, exist_ok=True)
     print(f"[*] TruthfulQA-Hindi: {len(items)} items, systems: {', '.join(systems)} -> {out_dir}")
 
@@ -226,10 +222,12 @@ def part_e2e(n, seed, systems, top_k, extra_policies=None):
             evidence[it["id"]] = [h["text"] for h in hs]
         json.dump(evidence, open(ev_path, "w", encoding="utf-8"), ensure_ascii=False)
 
-    # reference embeddings for the truthfulness judge (English refs from the original TruthfulQA)
-    def truth_score(answer, iid):
-        r = refs[iid]
+    # truthfulness judge: original English references, plus the human-checked Hindi best answer
+    def truth_score(answer, it):
+        r = refs[it["id"]]
         cor = [r["best"]] + r["correct"]
+        if it.get("verification_status", "unverified") != "unverified" and it.get("best_answer_hi"):
+            cor.append(it["best_answer_hi"])
         inc = r["incorrect"] or ["-"]
         E = retr.encode([answer] + cor + inc)
         a = E[0]
@@ -262,7 +260,7 @@ def part_e2e(n, seed, systems, top_k, extra_policies=None):
                 res = pipe.answer_from_query(q_hi, query)
             ans = res["answer"]
             abstain = ans.strip() == ABSTAIN_HI
-            ts = truth_score(ans, it["id"])
+            ts = truth_score(ans, it)
             claims = [] if abstain else sentences(ans)
             fs = align = None
             if claims:
@@ -354,6 +352,7 @@ def main():
     ap.add_argument("--policy", action="append", default=[], help="extra policy for ablations: crag_rl_<name>=<path>")
     ap.add_argument("--systems", nargs="*", default=SYSTEMS)
     ap.add_argument("--top-k", type=int, default=3)
+    ap.add_argument("--verified-only", action="store_true", help="evaluate only on human-verified items")
     ap.add_argument("--seed", type=int, default=42)
     a = ap.parse_args()
     set_seed(a.seed)
@@ -362,7 +361,7 @@ def main():
     if a.part == "query":
         part_query(a.n or 0)
     elif a.part == "e2e":
-        part_e2e(100 if a.n is None else a.n, a.seed, systems, a.top_k, extra)
+        part_e2e((0 if a.verified_only else 100) if a.n is None else a.n, a.seed, systems, a.top_k, extra, a.verified_only)
     else:
         d = sorted(p for p in os.listdir(RESULTS_DIR) if p.startswith("e2e_"))[-1]
         summarise(f"{RESULTS_DIR}/{d}", systems)

@@ -68,8 +68,22 @@ class CrossLingualRewardEngine:
             info = dict(self.cache[(p, q)])
             info["len"] = min(1.0, len(self.tok(q, add_special_tokens=False)["input_ids"]) / self.lmax)
             info["degenerate"] = 0
-            rewards.append(self.alpha * info["evidence"] + self.beta * info["qc"] + self.delta * info["qrel"]
-                           - self.gamma * info["len"])
+            
+            # ---------------------------------------------------------
+            # [MODIFIED]: Implemented strict retrieval penalty
+            # ---------------------------------------------------------
+            ev_score = info["evidence"]
+            if ev_score < 0.45:
+                retrieval_penalty = -0.5
+            else:
+                retrieval_penalty = 0.5 * ev_score
+
+            query_tokens = q.strip().split()
+            length_penalty = 0.0
+            if len(query_tokens) < 2 or len(query_tokens) > 8:
+                length_penalty = -0.3
+
+            rewards.append(ev_score + retrieval_penalty + length_penalty)
             infos.append(info)
         return rewards, infos
 
@@ -249,12 +263,15 @@ def main():
     ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--minibatch", type=int, default=8)
     ap.add_argument("--ppo-epochs", type=int, default=4)
-    ap.add_argument("--lr", type=float, default=2e-5)
+    # ---------------------------------------------------------
+    # [MODIFIED]: Lowered LR and increased KL coef for stability
+    # ---------------------------------------------------------
+    ap.add_argument("--lr", type=float, default=2e-6)
     ap.add_argument("--clip", type=float, default=0.2)
     ap.add_argument("--lam", type=float, default=0.95)
     ap.add_argument("--vf-coef", type=float, default=0.1)
     ap.add_argument("--ent-coef", type=float, default=0.01)
-    ap.add_argument("--kl-coef", type=float, default=0.05)
+    ap.add_argument("--kl-coef", type=float, default=0.15)
     ap.add_argument("--temperature", type=float, default=0.8)
     ap.add_argument("--top-k", type=int, default=50)
     ap.add_argument("--alpha", type=float, default=1.0)
@@ -269,11 +286,18 @@ def main():
     set_seed(a.seed)
     device = get_device()
 
-    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, AutoConfig
     from phase2_retriever import KnowledgeRetriever
 
     tok = AutoTokenizer.from_pretrained(a.sft)
-    policy = PolicyWithValue(AutoModelForSeq2SeqLM.from_pretrained(a.sft)).to(device)
+    
+    # ---------------------------------------------------------
+    # [MODIFIED]: Fix tie_word_embeddings warning
+    # ---------------------------------------------------------
+    config = AutoConfig.from_pretrained(a.sft)
+    config.tie_word_embeddings = False
+    policy = PolicyWithValue(AutoModelForSeq2SeqLM.from_pretrained(a.sft, config=config)).to(device)
+    
     if not a.train_embeddings:
         policy.model.shared.weight.requires_grad_(False)
     ref = copy.deepcopy(policy).eval()

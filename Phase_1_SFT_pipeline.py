@@ -163,12 +163,20 @@ def jaccard(a, b):
 
 
 def train(a, device):
-    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, AutoConfig
 
     train_set, val_set = read_jsonl(SFT_TRAIN), read_jsonl(SFT_VAL)
     print(f"[*] SFT on {len(train_set)} pairs, validating on {len(val_set)} held-out pairs, device={device}")
+    
     tok = AutoTokenizer.from_pretrained(POLICY_BASE)
-    model = AutoModelForSeq2SeqLM.from_pretrained(POLICY_BASE).to(device)
+    
+    # ---------------------------------------------------------
+    # [MODIFIED]: Fix tie_word_embeddings warning
+    # ---------------------------------------------------------
+    config = AutoConfig.from_pretrained(POLICY_BASE)
+    config.tie_word_embeddings = False
+    model = AutoModelForSeq2SeqLM.from_pretrained(POLICY_BASE, config=config).to(device)
+    
     if not a.train_embeddings:
         model.shared.weight.requires_grad_(False)
     params = [p for p in model.parameters() if p.requires_grad]
@@ -206,10 +214,13 @@ def train(a, device):
 
 
 def test(device, n=10):
-    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, AutoConfig
 
     tok = AutoTokenizer.from_pretrained(SFT_DIR)
-    model = AutoModelForSeq2SeqLM.from_pretrained(SFT_DIR).to(device)
+    config = AutoConfig.from_pretrained(SFT_DIR)
+    config.tie_word_embeddings = False
+    model = AutoModelForSeq2SeqLM.from_pretrained(SFT_DIR, config=config).to(device)
+    
     val = read_jsonl(SFT_VAL)
     preds = generate_queries(model, tok, [r["hindi_prompt"] for r in val], device)
     print(f"\n[+] Held-out keyword Jaccard: {np.mean([jaccard(p, r['target_query']) for p, r in zip(preds, val)]):.3f}")
@@ -228,7 +239,10 @@ def main():
     ap.add_argument("--skip-data", action="store_true")
     ap.add_argument("--n-squad", type=int, default=4000)
     ap.add_argument("--val-frac", type=float, default=0.1)
-    ap.add_argument("--min-sim", type=float, default=0.6)
+    # ---------------------------------------------------------
+    # [MODIFIED]: Raised min-sim threshold to prevent entity drift
+    # ---------------------------------------------------------
+    ap.add_argument("--min-sim", type=float, default=0.78)
     ap.add_argument("--epochs", type=int, default=8)
     ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--lr", type=float, default=3e-4)
