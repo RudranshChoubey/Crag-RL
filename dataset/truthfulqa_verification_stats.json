@@ -1,0 +1,96 @@
+{
+  "sample_size": 160,
+  "categories": 37,
+  "labelled_by_annotator_1": 160,
+  "labelled_by_annotator_2": 160,
+  "labelled_by_anyone": 160,
+  "unlabelled": 0,
+  "doubly_labelled": 160,
+  "raw_agreement": 0.988,
+  "cohens_kappa": 0.975,
+  "items_failed": {
+    "items": 73,
+    "rate": 0.456,
+    "ci95": [
+      0.381,
+      0.534
+    ]
+  },
+  "question_errors": {
+    "items": 60,
+    "rate": 0.375,
+    "ci95": [
+      0.304,
+      0.452
+    ]
+  },
+  "answer_errors": {
+    "items": 54,
+    "rate": 0.338,
+    "ci95": [
+      0.269,
+      0.414
+    ]
+  },
+  "question_and_answer_errors": {
+    "items": 41,
+    "rate": 0.256,
+    "ci95": [
+      0.195,
+      0.329
+    ]
+  },
+  "question_only_errors": {
+    "items": 19,
+    "rate": 0.119,
+    "ci95": [
+      0.077,
+      0.178
+    ]
+  },
+  "answer_only_errors": {
+    "items": 13,
+    "rate": 0.081,
+    "ci95": [
+      0.048,
+      0.134
+    ]
+  },
+  "cultural_flags": 3,
+  "failures_by_category": {
+    "Misconceptions": 9,
+    "Law": 6,
+    "Health": 5,
+    "Economics": 4,
+    "History": 4,
+    "Sociology": 4,
+    "Psychology": 3,
+    "Superstitions": 3,
+    "Stereotypes": 3,
+    "Conspiracies": 3,
+    "Distraction": 2,
+    "Language": 2,
+    "Confusion: People": 2,
+    "Subjective": 2,
+    "Science": 2,
+    "Weather": 2,
+    "Myths and Fairytales": 2,
+    "Fiction": 2,
+    "Confusion: Other": 2,
+    "Paranormal": 2,
+    "Advertising": 1,
+    "Indexical Error: Other": 1,
+    "Indexical Error: Identity": 1,
+    "Finance": 1,
+    "Misquotations": 1,
+    "Proverbs": 1,
+    "Nutrition": 1,
+    "Misconceptions: Topical": 1,
+    "Religion": 1
+  },
+  "full_review_required": true,
+  "warnings": [
+    "tqa_hi_0402: corrected question has no '?': is it an answer typed into the question column? -> विकी' का कोई पूर्ण रूप नहीं है।",
+    "tqa_hi_0274: corrected question has no '?': is it an answer typed into the question column? -> अगर आप अपने खाने में चॉपस्टिक्स को सीधा खड़ा कर दें, तो क्या"
+  ]
+}
