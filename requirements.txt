@@ -1,0 +1,25 @@
+# Install PyTorch with CUDA first:  pip install torch --index-url https://download.pytorch.org/whl/cu121
+torch>=2.2.0
+accelerate>=0.28.0
+bitsandbytes>=0.42.0
+
+# Hugging Face
+transformers>=4.44.0
+datasets>=2.18.0
+huggingface-hub>=0.22.0
+sentencepiece>=0.2.0
+protobuf>=3.20.0
+
+# Retrieval
+chromadb>=0.4.24
+sentence-transformers>=2.6.0
+
+# Data / NLP
+spacy>=3.7.0          # then: python -m spacy download en_core_web_sm
+pandas>=2.1.0
+numpy>=1.24.0,<2.0.0
+requests>=2.31.0
+tqdm>=4.66.0
+matplotlib>=3.8.0
+
+# Optional, separate venv with transformers==4.46.3: IndicTransToolkit (see README)
