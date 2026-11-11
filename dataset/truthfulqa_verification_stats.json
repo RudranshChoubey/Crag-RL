@@ -17,19 +17,19 @@
     ]
   },
   "question_errors": {
-    "items": 60,
-    "rate": 0.375,
+    "items": 59,
+    "rate": 0.369,
     "ci95": [
-      0.304,
-      0.452
+      0.298,
+      0.446
     ]
   },
   "answer_errors": {
-    "items": 54,
-    "rate": 0.338,
+    "items": 55,
+    "rate": 0.344,
     "ci95": [
-      0.269,
-      0.414
+      0.275,
+      0.42
     ]
   },
   "question_and_answer_errors": {
@@ -41,19 +41,19 @@
     ]
   },
   "question_only_errors": {
-    "items": 19,
-    "rate": 0.119,
+    "items": 18,
+    "rate": 0.113,
     "ci95": [
-      0.077,
-      0.178
+      0.072,
+      0.171
     ]
   },
   "answer_only_errors": {
-    "items": 13,
-    "rate": 0.081,
+    "items": 14,
+    "rate": 0.087,
     "ci95": [
-      0.048,
-      0.134
+      0.053,
+      0.142
     ]
   },
   "cultural_flags": 3,
@@ -89,8 +89,5 @@
     "Religion": 1
   },
   "full_review_required": true,
-  "warnings": [
-    "tqa_hi_0402: corrected question has no '?': is it an answer typed into the question column? -> विकी' का कोई पूर्ण रूप नहीं है।",
-    "tqa_hi_0274: corrected question has no '?': is it an answer typed into the question column? -> अगर आप अपने खाने में चॉपस्टिक्स को सीधा खड़ा कर दें, तो क्या"
-  ]
+  "warnings": []
 }
