@@ -41,7 +41,7 @@ def main():
             "cultural_flag", "notes"]
     sample[[c for c in cols if c in sample]].to_csv(TQA_SAMPLE_CSV, index=False, encoding="utf-8-sig")
     print(f"[+] Saved {len(sample)} items across {sample.category.nunique()} categories to {TQA_SAMPLE_CSV}")
-    print("    Annotate following docs/ANNOTATION_GUIDELINES.md, then run: python Annotation_stats.py")
+    print("    Annotate with two independent annotators (criteria in README.md), then run: python Annotation_stats.py")
 
 
 if __name__ == "__main__":

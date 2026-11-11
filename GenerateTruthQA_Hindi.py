@@ -86,7 +86,7 @@ def load_translator(kind, device, beams):
             return IndicTrans2(device, beams)
         except Exception as e:  # gated repo, transformers 5.x, toolkit missing ...
             print(f"[!] IndicTrans2 could not be loaded ({type(e).__name__}: {str(e)[:160]})")
-            print("[!] Falling back to NLLB-200. Record this in the report (docs/DATASET.md).")
+            print("[!] Falling back to NLLB-200 (recorded in the mt_system field of every item).")
             kind = "nllb"
     return {"nllb": NLLB, "opus": Opus}[kind](device, beams)
 

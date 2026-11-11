@@ -9,15 +9,15 @@ Fixes over the first version:
     passage?", so a generic query like "japan capital city tokyo" scored high for every prompt. It also
     embedded queries with ChromaDB's default English model, not the multilingual encoder of the index.
 
-Reward (proposal Eq. 1, see docs/DESIGN_NOTES.md for the alpha-term proxy):
-    R = alpha * max_j cos(x_hi, c_j)        evidence supports the *question* (cross-lingual)
-      + beta  * mean_j cos(q, c_j)          query lands in a coherent evidence region (Eq. 1 CosineSim)
-      + delta * cos(x_hi, q)                query means what the question asks
-      - gamma * min(1, |q| / L_max)         brevity
+Reward (final version; see README.md, "Development notes", for the earlier one):
+    e    = max_j cos(x_hi, c_j)             the retrieved evidence is about the *question* (cross-lingual)
+    R    = e + p(e) - l(q)
+    p(e) = -0.5 if e < 0.45 else 0.5 * e    penalise off-topic evidence
+    l(q) = 0.3 if the query has fewer than 2 or more than 8 words, else 0
     Empty / degenerate / repetitive queries get -1.
+    The --alpha/--beta/--delta/--gamma options belong to the earlier reward and are not used.
 
     python Phase_4.py                       # ~20-40 min on a laptop GPU
-    python Phase_4.py --beta 0 --out ./models/ppo_no_cos      # reward ablations
 """
 import argparse
 import copy
@@ -274,10 +274,10 @@ def main():
     ap.add_argument("--kl-coef", type=float, default=0.15)
     ap.add_argument("--temperature", type=float, default=0.8)
     ap.add_argument("--top-k", type=int, default=50)
-    ap.add_argument("--alpha", type=float, default=1.0)
-    ap.add_argument("--beta", type=float, default=0.3)
-    ap.add_argument("--delta", type=float, default=0.5)
-    ap.add_argument("--gamma", type=float, default=0.2)
+    ap.add_argument("--alpha", type=float, default=1.0, help="unused by the current reward")
+    ap.add_argument("--beta", type=float, default=0.3, help="unused by the current reward")
+    ap.add_argument("--delta", type=float, default=0.5, help="unused by the current reward")
+    ap.add_argument("--gamma", type=float, default=0.2, help="unused by the current reward")
     ap.add_argument("--n-val", type=int, default=64)
     ap.add_argument("--eval-every", type=int, default=10)
     ap.add_argument("--train-embeddings", action="store_true")

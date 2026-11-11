@@ -158,8 +158,9 @@ as shown above.
 Notes:
 - Step 3 needs the review sheet from step 2 annotated by two people (see [Dataset](#dataset-truthfulqa-hindi)).
   Step 10 uses the verified benchmark automatically when it exists.
-- `--targeted` in step 4 also fetches full English Wikipedia pages for the TruthfulQA questions. In our
-  runs most of these requests were rejected by the Wikipedia API, so the released results do not depend on them.
+- `--targeted` in step 4 also fetches full English Wikipedia pages for the TruthfulQA questions. Pass
+  `--contact <your e-mail or repo URL>`, which Wikipedia's API policy requires. In our runs (made before the
+  contact header was added) most of these requests were rejected, so the released results do not depend on them.
 - `run_full_system.py` retrieves the top 5 passages; `Evaluation.py` uses the top 3 (`--top-k`). Both use the 0.35 gate.
 - `Evaluation.py --part e2e --verified-only` evaluates only on the human-verified items; `--n 0` runs the full benchmark.
 - Steps 4 and 10 resume where they stopped if interrupted.
@@ -197,8 +198,8 @@ Metrics:
   An item was marked valid only if (a) the factual proposition is preserved, (b) the distinction between the
   correct answer and the misconception is preserved, and (c) the Hindi is natural and unambiguous. Failed items
   received a corrected question and/or best answer, and items whose premise is US/UK-specific were flagged.
-  Agreement was very high (Cohen's κ = 0.975), and errors were found in 45.6% of items (questions 37.5%,
-  reference answers 33.8%).
+  Agreement was very high (Cohen's κ = 0.975), and errors were found in 45.6% of items (questions 36.9%,
+  reference answers 34.4%).
 - **Coverage:** this error rate is above the protocol's 10% threshold for a full review, which has not yet been
   done. The 630 unverified items should be treated as noisy.
 
