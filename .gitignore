@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+RLEnv/
+IT2Env/
+.venv/
+.DS_Store
+
+# generated working data (rebuildable; the released copies live in dataset/)
+data/
+
+# model weights are over GitHub's 100 MB file limit
+models/

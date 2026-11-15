@@ -6,7 +6,7 @@ Changes from the first version:
   * ALL of Simple English Wikipedia by default (was the first 25,000 articles).
   * XQuAD English paragraphs are indexed, so the training/validation questions are answerable.
   * --targeted also fetches full English Wikipedia pages for every TruthfulQA question and caches
-    them in data/kb_cache/ (the frozen snapshot you commit to GitHub).
+    them in data/kb_cache/ (a frozen, reproducible snapshot).
   * New collection name (wiki_passages_v2) so old 350-word chunks are not mixed in.
 
     python Knowledege_build.py --targeted                 # recommended (~30-60 min on GPU)
@@ -20,7 +20,6 @@ import time
 from crag_utils import (CHROMA_DIR, COLLECTION, ENCODER_NAME, KB_CACHE_DIR, TQA_CSV, TQA_CSV_URL, get_device)
 
 BATCH = 256
-UA = {"User-Agent": "CRAG-RL-student-project/1.0 (Jain University; academic research)"}
 
 
 def chunk_text(text, chunk_words=120, overlap=20, min_words=25):
@@ -60,7 +59,22 @@ def xquad_docs():
         yield {"id": f"xquad_{len(seen)}", "title": "", "text": ctx, "source": "xquad"}
 
 
-def targeted_docs(per_query=2, max_words=2500):
+def _get_json(session, url, params, retries=5):
+    """GET with backoff. Wikipedia answers blocked or rate-limited requests with an HTML page,
+    which is what caused the JSONDecodeError; this retries and reports the HTTP status instead."""
+    for attempt in range(retries):
+        r = session.get(url, params=params, timeout=30)
+        if r.status_code == 200 and "json" in r.headers.get("Content-Type", ""):
+            return r.json()
+        if r.status_code in (429, 500, 502, 503, 504):
+            wait = int(r.headers.get("Retry-After", 0) or 0) or 2 ** (attempt + 1)
+            time.sleep(min(wait, 60))
+            continue
+        raise RuntimeError(f"HTTP {r.status_code}: {r.text[:200].strip()}")
+    raise RuntimeError(f"HTTP {r.status_code} after {retries} retries")
+
+
+def targeted_docs(contact, per_query=2, max_words=2500, delay=0.5):
     """Full English Wikipedia pages for each TruthfulQA question (cached = frozen snapshot)."""
     import pandas as pd
     import requests
@@ -78,33 +92,44 @@ def targeted_docs(per_query=2, max_words=2500):
     questions = list(pd.read_csv(src)["Question"].astype(str))
     api = "https://en.wikipedia.org/w/api.php"
     s = requests.Session()
-    s.headers.update(UA)
+    # Wikimedia's User-Agent policy requires contact information (a URL or e-mail) for automated clients.
+    s.headers.update({"User-Agent": f"CRAG-RL-research/1.0 ({contact}) python-requests"})
+    print(f"  {len(done)}/{len(questions)} questions already fetched, {len(pages)} pages cached")
+    failures = 0
     with open(cache_path, "a", encoding="utf-8") as fout:
         for i, q in enumerate(questions):
             if q in done:
                 continue
             try:
-                hits = s.get(api, params={"action": "query", "list": "search", "srsearch": q, "srlimit": per_query,
-                                          "format": "json"}, timeout=30).json().get("query", {}).get("search", [])
-                for h in hits:
+                res = _get_json(s, api, {"action": "query", "list": "search", "srsearch": q,
+                                         "srlimit": per_query, "format": "json"})
+                for h in res.get("query", {}).get("search", []):
                     pid = h["pageid"]
                     if pid in pages:
                         continue
-                    e = s.get(api, params={"action": "query", "prop": "extracts", "explaintext": 1, "pageids": pid,
-                                           "format": "json"}, timeout=30).json()
+                    e = _get_json(s, api, {"action": "query", "prop": "extracts", "explaintext": 1,
+                                           "pageids": pid, "format": "json"})
                     page = e["query"]["pages"][str(pid)]
                     d = {"pageid": pid, "title": page.get("title", ""),
                          "text": " ".join(page.get("extract", "").split()[:max_words])}
                     pages[pid] = d
                     fout.write(json.dumps(d, ensure_ascii=False) + "\n")
-                    time.sleep(0.05)
+                    fout.flush()
+                    time.sleep(delay)
                 done.add(q)
+                failures = 0
             except Exception as ex:
-                print(f"  [!] skipped ({ex.__class__.__name__}): {q[:60]}")
-            if (i + 1) % 50 == 0:
+                failures += 1
+                print(f"  [!] skipped ({ex}): {q[:60]}")
+                if failures >= 5:
+                    print("  [!] 5 failures in a row - stopping the fetch. Rerun later; finished questions are kept.")
+                    break
+            time.sleep(delay)
+            if (i + 1) % 25 == 0:
                 print(f"  targeted: {i + 1}/{len(questions)} questions, {len(pages)} pages")
                 json.dump(sorted(done), open(done_path, "w", encoding="utf-8"))
     json.dump(sorted(done), open(done_path, "w", encoding="utf-8"))
+    print(f"  {len(done)}/{len(questions)} questions fetched, {len(pages)} pages cached in {cache_path}")
     for d in pages.values():
         if d["text"]:
             yield {"id": f"enwiki_{d['pageid']}", "title": d["title"], "text": d["text"], "source": "enwiki_targeted"}
@@ -118,6 +143,8 @@ def main():
     ap.add_argument("--no-simplewiki", action="store_true")
     ap.add_argument("--no-xquad", action="store_true")
     ap.add_argument("--targeted", action="store_true", help="add full enwiki pages for TruthfulQA questions")
+    ap.add_argument("--contact", default="https://github.com",
+                    help="URL or e-mail for the Wikipedia User-Agent (Wikimedia policy), e.g. your GitHub repo URL")
     ap.add_argument("--reset", action="store_true", help="delete the collection first")
     a = ap.parse_args()
 
@@ -153,7 +180,7 @@ def main():
     if not a.no_xquad:
         sources.append(("XQuAD English paragraphs", xquad_docs()))
     if a.targeted:
-        sources.append(("targeted English Wikipedia pages", targeted_docs()))
+        sources.append(("targeted English Wikipedia pages", targeted_docs(a.contact)))
     if not a.no_simplewiki:
         sources.append(("Simple English Wikipedia", simple_wiki_docs(a.max_articles)))
 

@@ -18,7 +18,7 @@ class CrossLingualRAGPipeline:
     # ---------------------------------------------------------
     # [MODIFIED]: Changed top_k default to 5, lowered min_evidence
     # ---------------------------------------------------------
-    def __init__(self, policy_dir=PPO_DIR, top_k=5, min_evidence=0.35, generator=None, retriever=None):
+    def __init__(self, policy_dir=PPO_DIR, top_k=5, min_evidence=MIN_EVIDENCE_SIM, generator=None, retriever=None):
         from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, AutoConfig
         from phase2_retriever import KnowledgeRetriever
         from phase3_synthesis import CrossLingualGenerator
@@ -87,7 +87,7 @@ def main():
     # [MODIFIED]: Changed top_k default to 5 for better synthesis coverage
     # ---------------------------------------------------------
     ap.add_argument("--top-k", type=int, default=5)
-    ap.add_argument("--min-evidence", type=float, default=0.35)
+    ap.add_argument("--min-evidence", type=float, default=MIN_EVIDENCE_SIM)
     a = ap.parse_args()
     
     pipe = CrossLingualRAGPipeline(a.policy, a.top_k, a.min_evidence)
